@@ -17,12 +17,12 @@ const BACKEND_URL = "http://10.65.132.54:3000";
  * */
 
 function App() {
-  var opened = false;
   const [itemToAdd, setItemToAdd] = useState("");
   const [items, setItems] = useState([]);
   const [searchValue, setSearchValue] = useState("");
+  const [opened, setOpened] = useState(false);
   const getNotCompletedItems = () => { 
-    opened = false;
+    setOpened(false);
     axios
       .get(`https://api.todoist.com/rest/v1/tasks`, {
         headers: {
@@ -35,7 +35,7 @@ function App() {
       });
   }
   const getCompletedItems = () => {
-    opened = true;
+    setOpened(true);
     axios.get(
       `https://api.todoist.com/sync/v8/completed/get_all`, {
           headers: {
@@ -75,23 +75,39 @@ function App() {
     setItemToAdd("");
   };
 
-  const toggleItemChange = ({ id, done }) => {
+  const toggleItemChange = (item) => {
+    const {id , done} = item;
     // console.log(done);
-    // if (done) {
-    //   axios
-    //   .post(`https://api.todoist.com/rest/v1/tasks/${id}/reopen`, 
-    //   {
-    //     done: !done,
-    //   },
-    //   {
-    //     headers: {
-    //       Authorization: "Bearer 2a93b84bf15512083fa5b3a5d8d6cbf17c002e4b",
-    //     },
-    //   })
-    //   .then((response) => {
-    //     console.log(response)
-    //   });
-    // } else {
+    // console.log(opened)
+    if (!done && opened) {
+      console.log("REOPEN");
+      console.log(item)
+      axios
+      .post(`https://api.todoist.com/rest/v1/tasks/${item.task_id}/reopen`, 
+      {
+        done: !done,
+      },
+      {
+        headers: {
+          Authorization: "Bearer 2a93b84bf15512083fa5b3a5d8d6cbf17c002e4b",
+        },
+      })
+      .then((response) => {
+        console.log(response);
+        setItems( 
+          items.map((item) => {
+            if (item.id === id) {
+              return {
+                ...item,
+                done: !done,
+              };
+            }
+            return item;
+          })
+        );
+      });
+    } else {
+      console.log("CLOSE");
       axios
         .post(`https://api.todoist.com/rest/v1/tasks/${id}/close`, 
         {
@@ -115,7 +131,7 @@ function App() {
             })
           );
         });
-
+      }
   
   };
   // const toggleItemReOpen = ({ id, done }) => {
